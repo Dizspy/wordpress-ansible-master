@@ -1,0 +1,55 @@
+#Hostname
+website_hostname: a.ism.kto.ua
+
+#AWS Private IPs
+frontend_ip_address: 172.31.23.228
+backend_ip_address: 172.31.23.223
+database_ip_address: 172.31.17.70
+
+# role: common
+remote_deploy_user: deploy
+remote_deploy_group: deploy
+remote_deploy_home: /home/deploy
+# A path to your public key
+ssh_key_pub_path: /Users/your_username/.ssh/id_rsa.pub
+
+# role: wordpress
+remote_www_dir: "{{ remote_deploy_home}}/projects"
+remote_wordpress_dir: "{{ remote_www_dir }}/wordpress"
+wordpress_db_name: wordpress
+wordpress_db_user: wordpress
+wordpress_db_user_pass: Pa$sWoRd!123
+wordpress_db_prefix: wp_
+wordpress_home_url: http://a.itsm.org.ua
+wordpress_site_title: OpsWorks Test Site
+wordpress_admin_user: admin
+wordpress_admin_user_pass: Pa$sWoRd!123
+wordpress_admin_email: itsm@kto.ua
+
+wordpress_theme: alizee
+
+wordpress_users:
+
+- name: wp_editor
+  email: editor@itsm.org.ua
+  password: Pa$sWoRd!123
+  display_name: "Big Boss"
+  first_name: Vasily
+  last_name: Pupkin
+  role: editor
+
+- name: wp_author
+  email: author@itsm.org.ua
+  password: Pa$sWoRd!123
+  display_name: "Silvester Stallone"
+  first_name: Arnold
+  last_name: Schwarzenegger
+  role: author
+
+- name: wp_contributor
+  email: contributor@itsm.org.ua
+  password: Pa$sWoRd!123
+  display_name: "Filipp Bedrosovych"
+  first_name: Nikita
+  last_name: Djigurda
+  role: contributor

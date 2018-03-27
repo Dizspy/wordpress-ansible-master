@@ -1,0 +1,31 @@
+---
+mysql_root_username: root 
+mysql_root_password: Pa$sWoRd!123
+
+mysql_config_file: /etc/mysql/my.cnf
+
+mysql_packages:
+   - mysql-client
+   - mysql-server
+   - python-mysqldb
+
+allowed_hosts:
+    - 127.0.0.1
+    - "{{ backend_ip_address }}"
+    - "{{ database_ip_address }}"
+    - localhost
+
+# Databases.
+mysql_databases: 
+  - name: "{{ wordpress_db_name }}"
+    collation: utf8_general_ci
+    encoding: utf8
+    replicate: 1
+
+# Users.
+mysql_users: 
+  - name: "{{ wordpress_db_user }}"
+    host: "{{ backend_ip_address }}"
+    password: "{{ wordpress_db_user_pass }}"
+    priv: "{{ wordpress_db_name }}.*:ALL,GRANT"
+

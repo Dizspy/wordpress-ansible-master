@@ -1,0 +1,83 @@
+---
+- name: Is WordPress downloaded?
+  stat: path="{{ remote_wordpress_dir }}/index.php"
+  register: wp_dir
+
+- name: Create WordPress directory
+  file: path="{{ remote_wordpress_dir }}"
+        owner="{{ remote_deploy_user }}"
+        group="{{ remote_deploy_group }}"
+        mode=0755
+        state=directory
+  when: wp_dir.stat.isdir is not defined
+
+- name: Download WordPress
+  command: wp core download
+  args:
+      chdir: "{{ remote_wordpress_dir }}/"
+  remote_user: "{{ remote_deploy_user }}"
+  when: wp_dir.stat.isdir is not defined
+
+- name: set permissions to wp-content folder
+  file: path="{{ remote_wordpress_dir }}/wp-content"
+        owner="{{ remote_deploy_user }}"
+        group="www-data"
+        mode=0775
+        recurse=yes
+  when: wp_dir.stat.isdir is not defined
+
+- name: Configure WordPress
+  command: wp core config
+           --path="{{ remote_wordpress_dir }}"
+           --dbname="{{ wordpress_db_name }}"
+           --dbuser="{{ wordpress_db_user }}"
+           --dbpass="{{ wordpress_db_user_pass }}"
+           --dbprefix="{{ wordpress_db_prefix }}"
+           --dbhost="{{ database_ip_address }}"
+           --extra-php="define('FS_METHOD', 'direct');"
+  remote_user: "{{ remote_deploy_user }}"
+  when: wp_dir.stat.isdir is not defined
+
+- name: Is WordPress installed?
+  command: wp core is-installed
+  args:
+    chdir: "{{ remote_wordpress_dir }}/"
+  register: wordpress_is_installed
+  ignore_errors: True
+  remote_user: "{{ remote_deploy_user }}"
+
+- name: Install WordPress tables
+  command: wp core install
+            --url="{{ wordpress_home_url }}"
+            --title="{{ wordpress_site_title }}"
+            --admin_user="{{ wordpress_admin_user }}"
+            --admin_password="{{ wordpress_admin_user_pass }}"
+            --admin_email="{{ wordpress_admin_email }}"
+  args:
+      chdir: "{{ remote_wordpress_dir }}/"
+  when: wordpress_is_installed|failed
+  remote_user: "{{ remote_deploy_user }}"
+
+- name: Install WordPress users
+  command: wp user create 
+        "{{ item.name }}"
+        "{{ item.email }}"
+        --user_pass="{{ item.password}}"
+        --display_name="{{ item.display_name }}"
+        --first_name="{{ item.first_name}}"
+        --last_name="{{ item.last_name}}"
+        --role="{{ item.role }}"       
+  with_items: "{{ wordpress_users }}"
+  args:
+    chdir: "{{ remote_wordpress_dir }}"
+  when: wordpress_is_installed|failed
+  remote_user: "{{ remote_deploy_user }}"
+
+- name: Install WordPress theme
+  command: "wp theme install {{ wordpress_theme }} --activate"
+  args:
+    chdir: "{{ remote_wordpress_dir }}"
+  when: wordpress_is_installed|failed
+  remote_user: "{{ remote_deploy_user }}"
+
+

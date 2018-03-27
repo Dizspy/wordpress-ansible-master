@@ -1,0 +1,6 @@
+---
+# Configure MySQL.
+- import_tasks: setup.yml
+- import_tasks: databases.yml
+- import_tasks: users.yml
+

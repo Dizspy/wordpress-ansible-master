@@ -1,0 +1,55 @@
+# Ansible managed
+
+server {
+
+    server_name a.itsm.org.ua;
+    listen 80;
+
+    set $backend {{ backend_ip_address }};
+    # Do not cache dynamic user pages 
+    location ~* /(basket.aspx|visitedgoods.aspx|users/|sale/order.aspx|sale/posted.aspx) {
+
+         proxy_pass http://$backend;
+         proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+         proxy_set_header Host $http_host;
+         proxy_pass_header Set-Cookie;
+         proxy_redirect off;
+
+         set $IsAuth 1;
+         if ($cookie_AUTH = "") {
+         set $IsAuth 0;
+
+         }
+
+    }
+
+    location / {
+         rewrite   ([a-zA-Z0-9]+)\|([a-zA-Z0-9]+)  $1$2?  permanent;
+         rewrite   ([a-zA-Z0-9]+)\%7C([a-zA-Z0-9]+)  $1$2?  permanent;
+         rewrite   (.*)\%7C$  $1?  permanent;
+         rewrite   (.*)\|  $1?  permanent;
+
+         proxy_pass http://$backend;
+         proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+         proxy_set_header Host $http_host;
+         proxy_pass_header Set-Cookie;
+         proxy_ignore_headers "Expires" "Cache-Control" "Set-Cookie";
+            # Check user authentication.
+         set $IsAuth 1;
+         if ($cookie_AUTH = "") {
+            set $IsAuth 0;
+         }
+            # Checking to renew cache
+         set $DoBypass 0;
+         if ($http_user_agent = "WGET-POST-daemon") {
+            set $DoBypass 1;
+         }
+
+         proxy_cache STATIC;
+         proxy_redirect off;
+
+         }
+
+}

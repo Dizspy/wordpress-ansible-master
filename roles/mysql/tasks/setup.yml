@@ -1,0 +1,38 @@
+---
+- name: Update apt cache.
+  apt: update_cache=yes
+  
+- name: Ensure MySQL packages are installed.
+  apt: "name={{ item }} state=installed"
+  with_items: "{{ mysql_packages }}"
+  
+- name: Copy my.cnf global MySQL configuration.
+  template:
+    src: my.cnf.j2
+    dest: "{{ mysql_config_file }}"
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart mysql
+
+- name: MySQL | Set the root password.
+  mysql_user: 
+    name={{ mysql_root_username }}  
+    host="{{ item }}"
+    password="{{ mysql_root_password }}"
+  with_items: "{{ allowed_hosts }}"
+
+- name: MySQL | Config for easy access as root user
+  template: src=root-my.cnf.j2 dest=/root/.my.cnf
+  
+- name: MySQL | Delete anonymous MySQL server user for {{ server_hostname }}
+  mysql_user: 
+    name="" 
+    host="{{ item }}" 
+    state="absent" 
+    login_user={{ mysql_root_username }} 
+    login_password={{ mysql_root_password }}
+  with_items: "{{ allowed_hosts }}"
+
+- name: MySQL | restart mysql
+  service: name=mysql state=restarted

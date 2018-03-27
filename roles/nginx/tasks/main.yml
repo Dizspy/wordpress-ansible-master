@@ -1,0 +1,21 @@
+---
+- name: Install Nginx
+  apt: name=nginx state=present 
+
+- name: Create nginx.conf
+  template: src=nginx.conf.j2 dest=/etc/nginx/nginx.conf
+
+- name: Disable default site
+  file: path=/etc/nginx/sites-enabled/default state=absent
+
+- name: Create WordPress site configuration
+  template: src=wordpress.conf.j2
+            dest=/etc/nginx/sites-available/wordpress.conf
+
+- name: Enable WordPress site configuration
+  file: src="/etc/nginx/sites-available/wordpress.conf"
+        dest="/etc/nginx/sites-enabled/wordpress.conf"
+        owner=root
+        group=root
+        state=link
+  notify: restart nginx
